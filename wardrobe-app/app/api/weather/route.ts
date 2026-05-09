@@ -6,7 +6,7 @@ export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url);
   const locationParam = searchParams.get('location');
 
-  const { preferences } = readWardrobe();
+  const { preferences } = await readWardrobe();
   const location = locationParam || preferences.location;
   const apiKey = preferences.openWeatherApiKey || process.env.OPENWEATHER_API_KEY;
 

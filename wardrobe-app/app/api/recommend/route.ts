@@ -7,7 +7,7 @@ import { cookies } from 'next/headers';
 import { WeatherData, CalendarEvent } from '@/types';
 
 export async function GET() {
-  const { items, preferences } = readWardrobe();
+  const { items, preferences } = await readWardrobe();
 
   if (items.length === 0) {
     return NextResponse.json({ error: 'No clothes in wardrobe. Add some items first!' }, { status: 400 });
@@ -18,14 +18,12 @@ export async function GET() {
     return NextResponse.json({ error: 'Anthropic API key not configured' }, { status: 400 });
   }
 
-  // Fetch weather
   let weather: WeatherData | null = null;
   const weatherApiKey = preferences.openWeatherApiKey || process.env.OPENWEATHER_API_KEY;
   if (preferences.location && weatherApiKey) {
     weather = await getWeather(preferences.location, weatherApiKey, preferences.temperatureUnit).catch(() => null);
   }
 
-  // Fetch calendar events
   let events: CalendarEvent[] = [];
   const cookieStore = await cookies();
   const accessToken = cookieStore.get('google_access_token')?.value;

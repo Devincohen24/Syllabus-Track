@@ -3,7 +3,7 @@ import { getAuthUrl } from '@/lib/google-calendar';
 import { readWardrobe } from '@/lib/storage';
 
 export async function GET() {
-  const { preferences } = readWardrobe();
+  const { preferences } = await readWardrobe();
   const clientId = preferences.googleClientId || process.env.GOOGLE_CLIENT_ID;
   const clientSecret = preferences.googleClientSecret || process.env.GOOGLE_CLIENT_SECRET;
   const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';

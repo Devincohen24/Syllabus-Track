@@ -12,7 +12,7 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ events: [], connected: false });
   }
 
-  const { preferences } = readWardrobe();
+  const { preferences } = await readWardrobe();
   const clientId = preferences.googleClientId || process.env.GOOGLE_CLIENT_ID;
   const clientSecret = preferences.googleClientSecret || process.env.GOOGLE_CLIENT_SECRET;
 

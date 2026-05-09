@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getOAuth2Client } from '@/lib/google-calendar';
-import { updatePreferences } from '@/lib/storage';
-import { readWardrobe } from '@/lib/storage';
+import { updatePreferences, readWardrobe } from '@/lib/storage';
 import { cookies } from 'next/headers';
 
 export async function GET(req: NextRequest) {
@@ -15,7 +14,7 @@ export async function GET(req: NextRequest) {
     return NextResponse.redirect(`${appUrl}/settings?error=calendar_auth_failed`);
   }
 
-  const { preferences } = readWardrobe();
+  const { preferences } = await readWardrobe();
   const clientId = preferences.googleClientId || process.env.GOOGLE_CLIENT_ID;
   const clientSecret = preferences.googleClientSecret || process.env.GOOGLE_CLIENT_SECRET;
 
@@ -31,14 +30,14 @@ export async function GET(req: NextRequest) {
     httpOnly: true,
     secure: process.env.NODE_ENV === 'production',
     sameSite: 'lax' as const,
-    maxAge: 60 * 60 * 24 * 30, // 30 days
+    maxAge: 60 * 60 * 24 * 30,
     path: '/',
   };
 
   cookieStore.set('google_access_token', tokens.access_token || '', cookieOptions);
   cookieStore.set('google_refresh_token', tokens.refresh_token || '', cookieOptions);
 
-  updatePreferences({ googleCalendarConnected: true });
+  await updatePreferences({ googleCalendarConnected: true });
 
   return NextResponse.redirect(`${appUrl}/settings?success=calendar_connected`);
 }

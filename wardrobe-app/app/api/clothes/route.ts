@@ -4,7 +4,7 @@ import { ClothingItem } from '@/types';
 import { v4 as uuidv4 } from 'uuid';
 
 export async function GET() {
-  const data = readWardrobe();
+  const data = await readWardrobe();
   return NextResponse.json({ items: data.items });
 }
 
@@ -24,7 +24,7 @@ export async function POST(req: NextRequest) {
     wornCount: 0,
     description: body.description,
   };
-  const saved = addClothingItem(item);
+  const saved = await addClothingItem(item);
   return NextResponse.json({ item: saved }, { status: 201 });
 }
 
@@ -32,7 +32,7 @@ export async function PATCH(req: NextRequest) {
   const body = await req.json();
   const { id, ...updates } = body;
   if (!id) return NextResponse.json({ error: 'Missing id' }, { status: 400 });
-  const updated = updateClothingItem(id, updates);
+  const updated = await updateClothingItem(id, updates);
   if (!updated) return NextResponse.json({ error: 'Item not found' }, { status: 404 });
   return NextResponse.json({ item: updated });
 }
@@ -41,7 +41,7 @@ export async function DELETE(req: NextRequest) {
   const { searchParams } = new URL(req.url);
   const id = searchParams.get('id');
   if (!id) return NextResponse.json({ error: 'Missing id' }, { status: 400 });
-  const removed = removeClothingItem(id);
+  const removed = await removeClothingItem(id);
   if (!removed) return NextResponse.json({ error: 'Item not found' }, { status: 404 });
   return NextResponse.json({ success: true });
 }
