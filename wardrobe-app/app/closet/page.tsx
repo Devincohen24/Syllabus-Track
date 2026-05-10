@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import ClothingCard from '@/components/ClothingCard';
 import ClothingUpload from '@/components/ClothingUpload';
+import ClothingEditModal from '@/components/ClothingEditModal';
 import { ClothingItem, ClothingCategory, AnalysisResult } from '@/types';
 
 const categoryLabels: Record<ClothingCategory, string> = {
@@ -37,6 +38,7 @@ export default function ClosetPage() {
   const [showUpload, setShowUpload] = useState(false);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
+  const [editingItem, setEditingItem] = useState<ClothingItem | null>(null);
 
   const loadItems = useCallback(async () => {
     setLoading(true);
@@ -83,6 +85,17 @@ export default function ClosetPage() {
     setItems((prev) =>
       prev.map((i) => i.id === id ? { ...i, wornCount: i.wornCount + 1, lastWorn: new Date().toISOString() } : i)
     );
+  };
+
+  const handleEdit = async (id: string, updates: Partial<ClothingItem>) => {
+    const res = await fetch('/api/clothes', {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id, ...updates }),
+    });
+    if (!res.ok) throw new Error('Failed to save');
+    const data = await res.json();
+    setItems((prev) => prev.map((i) => i.id === id ? data.item : i));
   };
 
   const categories = ['all', ...new Set(items.map((i) => i.category))] as FilterCategory[];
@@ -199,6 +212,7 @@ export default function ClosetPage() {
                     item={item}
                     onDelete={handleDelete}
                     onMarkWorn={handleMarkWorn}
+                    onEdit={(id) => setEditingItem(items.find((i) => i.id === id) ?? null)}
                   />
                 ))}
               </div>
@@ -213,9 +227,18 @@ export default function ClosetPage() {
               item={item}
               onDelete={handleDelete}
               onMarkWorn={handleMarkWorn}
+              onEdit={(id) => setEditingItem(items.find((i) => i.id === id) ?? null)}
             />
           ))}
         </div>
+      )}
+
+      {editingItem && (
+        <ClothingEditModal
+          item={editingItem}
+          onSave={handleEdit}
+          onClose={() => setEditingItem(null)}
+        />
       )}
     </div>
   );

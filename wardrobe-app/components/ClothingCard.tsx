@@ -6,6 +6,7 @@ interface Props {
   item: ClothingItem;
   onDelete?: (id: string) => void;
   onMarkWorn?: (id: string) => void;
+  onEdit?: (id: string) => void;
   selected?: boolean;
   onSelect?: (id: string) => void;
 }
@@ -28,7 +29,7 @@ const formalityColor: Record<string, string> = {
   formal: 'bg-gray-800 text-white',
 };
 
-export default function ClothingCard({ item, onDelete, onMarkWorn, selected, onSelect }: Props) {
+export default function ClothingCard({ item, onDelete, onMarkWorn, onEdit, selected, onSelect }: Props) {
   return (
     <div
       className={`relative bg-white rounded-2xl shadow-md overflow-hidden transition-all duration-200 hover:shadow-lg ${
@@ -84,7 +85,7 @@ export default function ClothingCard({ item, onDelete, onMarkWorn, selected, onS
           <p className="text-xs text-gray-400 mb-2">Worn {item.wornCount}x</p>
         )}
 
-        {(onMarkWorn || onDelete) && (
+        {(onMarkWorn || onEdit || onDelete) && (
           <div className="flex gap-2 mt-2 pt-2 border-t border-gray-100">
             {onMarkWorn && (
               <button
@@ -92,6 +93,14 @@ export default function ClothingCard({ item, onDelete, onMarkWorn, selected, onS
                 className="flex-1 text-xs bg-indigo-50 hover:bg-indigo-100 text-indigo-700 py-1.5 rounded-lg transition-colors"
               >
                 Wore today
+              </button>
+            )}
+            {onEdit && (
+              <button
+                onClick={(e) => { e.stopPropagation(); onEdit(item.id); }}
+                className="text-xs bg-gray-50 hover:bg-gray-100 text-gray-600 px-3 py-1.5 rounded-lg transition-colors"
+              >
+                Edit
               </button>
             )}
             {onDelete && (
