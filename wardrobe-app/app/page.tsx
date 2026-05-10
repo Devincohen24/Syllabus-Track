@@ -111,6 +111,22 @@ export default function HomePage() {
         })
       )
     );
+
+    // Log the worn outfit to the learning system
+    if (recommendation) {
+      fetch('/api/learn', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'outfit_worn',
+          items: recommendation.items,
+          weather,
+          events,
+          source: 'ai_recommendation',
+        }),
+      }).catch(() => {});
+    }
+
     await loadWardrobeCount();
   };
 
@@ -180,13 +196,23 @@ export default function HomePage() {
         currentOutfit={recommendation}
         weather={weather}
         events={events}
-        onOutfitUpdate={(items: ClothingItem[]) =>
+        onOutfitUpdate={(items: ClothingItem[]) => {
           setRecommendation((prev) =>
             prev
               ? { ...prev, items, occasionSummary: 'Updated by your style assistant' }
               : { items, reasoning: '', occasionSummary: 'Suggested by your style assistant', weatherNote: '', styleNote: '' }
-          )
-        }
+          );
+          // Log chat-driven outfit swap as a preference signal
+          fetch('/api/learn', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              action: 'signal',
+              signalType: 'outfit_accepted',
+              details: { itemNames: items.map((i) => i.name), source: 'chat_swap' },
+            }),
+          }).catch(() => {});
+        }}
       />
     </div>
   );

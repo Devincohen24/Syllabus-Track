@@ -3,6 +3,7 @@ import { recommendOutfit } from '@/lib/claude';
 import { readWardrobe } from '@/lib/storage';
 import { getWeather } from '@/lib/weather';
 import { getTodayEvents } from '@/lib/google-calendar';
+import { getStyleProfile } from '@/lib/learning';
 import { cookies } from 'next/headers';
 import { WeatherData, CalendarEvent } from '@/types';
 
@@ -35,10 +36,15 @@ export async function GET() {
     events = await getTodayEvents(accessToken, refreshToken, clientId, clientSecret).catch(() => []);
   }
 
-  const recommendation = await recommendOutfit(items, weather, events, {
-    styleProfile: preferences.styleProfile,
-    favoriteColors: preferences.favoriteColors,
-  }, apiKey);
+  // Fetch learned style profile in parallel with everything else
+  const { summary: learnedProfile } = await getStyleProfile().catch(() => ({ summary: '' }));
+
+  const recommendation = await recommendOutfit(
+    items, weather, events,
+    { styleProfile: preferences.styleProfile, favoriteColors: preferences.favoriteColors },
+    apiKey,
+    learnedProfile || undefined,
+  );
 
   return NextResponse.json({ recommendation, weather, events });
 }

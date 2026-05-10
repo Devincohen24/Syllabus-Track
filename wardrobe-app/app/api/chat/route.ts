@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import Anthropic from '@anthropic-ai/sdk';
 import { readWardrobe } from '@/lib/storage';
+import { getStyleProfile, logStyleSignal } from '@/lib/learning';
 import { ClothingItem, WeatherData, CalendarEvent } from '@/types';
 
 interface ChatMessage {
@@ -40,6 +41,7 @@ function buildSystemPrompt(
   currentOutfit: ClothingItem[],
   weather: WeatherData | null,
   events: CalendarEvent[],
+  learnedProfile?: string,
 ): string {
   const wardrobeSummary = wardrobe.map((c) =>
     `- ID: ${c.id} | ${c.name} | ${c.category} | ${c.colors.join('/')} | ${c.formality} | seasons: ${c.seasons.join(',')}`
@@ -58,7 +60,7 @@ function buildSystemPrompt(
     : 'No events today.';
 
   return `You are a friendly personal stylist AI assistant embedded in a wardrobe app. You help the user pick and refine their outfit for the day.
-
+${learnedProfile ? `\nWHAT YOU KNOW ABOUT THIS USER (learned from their history — use this to personalize responses):\n${learnedProfile}\n` : ''}
 TODAY'S CONTEXT:
 Weather: ${weatherSummary}
 Events:
@@ -89,12 +91,15 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Anthropic API key not configured' }, { status: 400 });
   }
 
+  // Fetch learned profile to personalize the chat
+  const { summary: learnedProfile } = await getStyleProfile().catch(() => ({ summary: '' }));
+
   const client = new Anthropic({ apiKey });
 
   const response = await client.messages.create({
     model: 'claude-sonnet-4-6',
     max_tokens: 1024,
-    system: buildSystemPrompt(items, currentOutfit, weather, events),
+    system: buildSystemPrompt(items, currentOutfit, weather, events, learnedProfile || undefined),
     tools: [suggestOutfitTool],
     messages: messages.map((m) => ({ role: m.role, content: m.content })),
   });
@@ -112,6 +117,19 @@ export async function POST(req: NextRequest) {
     const itemsById = new Map(items.map((i) => [i.id, i]));
     const picked = input.item_ids.map((id) => itemsById.get(id)).filter(Boolean) as ClothingItem[];
     if (picked.length > 0) updatedOutfit = picked;
+  }
+
+  // Log the user's last message as a chat signal (fire-and-forget)
+  const lastUserMsg = [...messages].reverse().find((m) => m.role === 'user');
+  if (lastUserMsg) {
+    logStyleSignal({
+      signalType: updatedOutfit ? 'chat_swap' : 'chat_request',
+      details: {
+        message: lastUserMsg.content,
+        outfitSwapped: !!updatedOutfit,
+        swappedTo: updatedOutfit?.map((i) => i.name) ?? [],
+      },
+    }, apiKey).catch(() => {});
   }
 
   return NextResponse.json({ reply: replyText, updatedOutfit });

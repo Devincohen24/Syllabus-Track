@@ -55,7 +55,8 @@ export async function recommendOutfit(
   weather: WeatherData | null,
   events: CalendarEvent[],
   preferences: { styleProfile: string[]; favoriteColors: string[] },
-  apiKey?: string
+  apiKey?: string,
+  learnedProfile?: string
 ): Promise<OutfitRecommendation> {
   const client = getClient(apiKey);
 
@@ -91,6 +92,7 @@ ${eventsSummary}
 
 USER STYLE PREFERENCES: ${preferences.styleProfile.join(', ') || 'No specific preference'}
 FAVORITE COLORS: ${preferences.favoriteColors.join(', ') || 'No preference'}
+${learnedProfile ? `\nLEARNED STYLE PROFILE (from past behavior — prioritize this):\n${learnedProfile}` : ''}
 
 Pick a complete outfit from the available wardrobe items. Return a JSON object:
 {
