@@ -4,7 +4,8 @@ import { useState, useEffect, useCallback } from 'react';
 import WeatherWidget from '@/components/WeatherWidget';
 import CalendarEvents from '@/components/CalendarEvents';
 import OutfitDisplay from '@/components/OutfitDisplay';
-import { WeatherData, CalendarEvent, OutfitRecommendation } from '@/types';
+import ChatPanel from '@/components/ChatPanel';
+import { WeatherData, CalendarEvent, OutfitRecommendation, ClothingItem } from '@/types';
 import Link from 'next/link';
 
 interface RecommendResponse {
@@ -174,6 +175,19 @@ export default function HomePage() {
           Refresh Recommendation
         </button>
       )}
+
+      <ChatPanel
+        currentOutfit={recommendation}
+        weather={weather}
+        events={events}
+        onOutfitUpdate={(items: ClothingItem[]) =>
+          setRecommendation((prev) =>
+            prev
+              ? { ...prev, items, occasionSummary: 'Updated by your style assistant' }
+              : { items, reasoning: '', occasionSummary: 'Suggested by your style assistant', weatherNote: '', styleNote: '' }
+          )
+        }
+      />
     </div>
   );
 }
