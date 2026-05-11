@@ -9,7 +9,8 @@ export async function GET(req: NextRequest) {
 
   // ICS URL takes priority — simpler and works with any calendar app
   if (preferences.calendarIcsUrl) {
-    const events = await getTodayEventsFromIcs(preferences.calendarIcsUrl).catch(() => []);
+    const localDate = req.nextUrl.searchParams.get('localDate') ?? undefined;
+    const events = await getTodayEventsFromIcs(preferences.calendarIcsUrl, localDate).catch(() => []);
     return NextResponse.json({ events, connected: true, method: 'ics' });
   }
 

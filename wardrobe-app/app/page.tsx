@@ -65,7 +65,8 @@ export default function HomePage() {
 
   const loadCalendar = useCallback(async () => {
     setLoadingCalendar(true);
-    const res = await fetch('/api/calendar').catch(() => null);
+    const localDate = new Date().toLocaleDateString('en-CA'); // YYYY-MM-DD in user's timezone
+    const res = await fetch(`/api/calendar?localDate=${localDate}`).catch(() => null);
     setLoadingCalendar(false);
     if (!res?.ok) return;
     const data: CalendarResponse = await res.json();
@@ -90,7 +91,8 @@ export default function HomePage() {
   const getOutfitRecommendation = async () => {
     setLoadingOutfit(true);
     setError('');
-    const res = await fetch('/api/recommend').catch(() => null);
+    const localDate = new Date().toLocaleDateString('en-CA');
+    const res = await fetch(`/api/recommend?localDate=${localDate}`).catch(() => null);
     setLoadingOutfit(false);
     if (!res) { setError('Network error'); return; }
     const data = await res.json();

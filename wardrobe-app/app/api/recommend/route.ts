@@ -1,4 +1,4 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { recommendOutfit } from '@/lib/claude';
 import { readWardrobe } from '@/lib/storage';
 import { getWeather } from '@/lib/weather';
@@ -8,7 +8,7 @@ import { getStyleProfile } from '@/lib/learning';
 import { cookies } from 'next/headers';
 import { WeatherData, CalendarEvent } from '@/types';
 
-export async function GET() {
+export async function GET(req: NextRequest) {
   const { items, preferences } = await readWardrobe();
 
   if (items.length === 0) {
@@ -28,7 +28,8 @@ export async function GET() {
 
   let events: CalendarEvent[] = [];
   if (preferences.calendarIcsUrl) {
-    events = await getTodayEventsFromIcs(preferences.calendarIcsUrl).catch(() => []);
+    const localDate = req.nextUrl.searchParams.get('localDate') ?? undefined;
+    events = await getTodayEventsFromIcs(preferences.calendarIcsUrl, localDate).catch(() => []);
   } else {
     const cookieStore = await cookies();
     const accessToken = cookieStore.get('google_access_token')?.value;
