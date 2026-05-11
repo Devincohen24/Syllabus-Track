@@ -17,6 +17,7 @@ interface RecommendResponse {
 interface CalendarResponse {
   events: CalendarEvent[];
   connected: boolean;
+  locked?: boolean;
 }
 
 interface WeatherResponse {
@@ -43,6 +44,7 @@ export default function HomePage() {
   const [error, setError] = useState('');
   const [wardrobeCount, setWardrobeCount] = useState(0);
   const [hasKeys, setHasKeys] = useState(false);
+  const [calendarLocked, setCalendarLocked] = useState(false);
 
   const today = new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' });
 
@@ -72,6 +74,7 @@ export default function HomePage() {
     const data: CalendarResponse = await res.json();
     setEvents(data.events);
     setCalendarConnected(data.connected);
+    setCalendarLocked(!!data.locked);
   }, []);
 
   const loadWardrobeCount = useCallback(async () => {
@@ -164,7 +167,22 @@ export default function HomePage() {
       <WeatherWidget weather={weather} loading={loadingWeather} unit={unit} />
 
       {/* Calendar */}
-      <CalendarEvents events={events} connected={calendarConnected} loading={loadingCalendar} />
+      {calendarLocked ? (
+        <div className="bg-gradient-to-r from-indigo-50 to-purple-50 border border-indigo-200 rounded-2xl p-5 flex items-center justify-between gap-4">
+          <div>
+            <p className="font-semibold text-indigo-900 text-sm">📅 Calendar — Premium Feature</p>
+            <p className="text-indigo-700 text-xs mt-0.5">Upgrade to see today&apos;s events and get smarter outfit picks.</p>
+          </div>
+          <Link
+            href="/settings?upgrade=1"
+            className="shrink-0 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-bold px-4 py-2 rounded-xl transition-colors"
+          >
+            Upgrade $0.99/mo
+          </Link>
+        </div>
+      ) : (
+        <CalendarEvents events={events} connected={calendarConnected} loading={loadingCalendar} />
+      )}
 
       {/* Outfit recommendation */}
       {error && (
