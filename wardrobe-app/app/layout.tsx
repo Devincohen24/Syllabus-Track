@@ -1,7 +1,6 @@
 import type { Metadata } from 'next';
 import './globals.css';
 import Link from 'next/link';
-import LogoutButton from '@/components/LogoutButton';
 
 export const metadata: Metadata = {
   title: 'StyleAI — Smart Wardrobe',
@@ -36,7 +35,6 @@ function Nav() {
             >
               Settings
             </Link>
-            <LogoutButton />
           </div>
         </div>
       </div>
