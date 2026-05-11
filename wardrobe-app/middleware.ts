@@ -1,45 +1,29 @@
-import { createServerClient } from '@supabase/ssr';
 import { NextRequest, NextResponse } from 'next/server';
 
-export async function middleware(request: NextRequest) {
-  let response = NextResponse.next({ request });
-
-  const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    {
-      cookies: {
-        getAll() { return request.cookies.getAll(); },
-        setAll(toSet) {
-          toSet.forEach(({ name, value }) => request.cookies.set(name, value));
-          response = NextResponse.next({ request });
-          toSet.forEach(({ name, value, options }) => response.cookies.set(name, value, options));
-        },
-      },
-    }
-  );
-
-  const { data: { user } } = await supabase.auth.getUser();
-
+// Supabase @supabase/ssr createBrowserClient automatically manages
+// cookies named `sb-<project-ref>-auth-token`. We check for any such
+// cookie here without importing @supabase/ssr so the middleware
+// stays compatible with the Next.js Edge runtime.
+export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
-  // Always allow login page and auth API routes
+  // Always allow the login page and auth API routes through
   if (pathname.startsWith('/login') || pathname.startsWith('/api/auth')) {
-    // If already logged in and hitting /login, send home
-    if (user && pathname === '/login') {
-      return NextResponse.redirect(new URL('/', request.url));
-    }
-    return response;
+    return NextResponse.next();
   }
 
-  // Protect everything else
-  if (!user) {
+  // Supabase sets an `sb-*-auth-token` cookie when signed in
+  const hasSession = request.cookies
+    .getAll()
+    .some((c) => /^sb-.+-auth-token$/.test(c.name));
+
+  if (!hasSession) {
     const loginUrl = new URL('/login', request.url);
     loginUrl.searchParams.set('next', pathname);
     return NextResponse.redirect(loginUrl);
   }
 
-  return response;
+  return NextResponse.next();
 }
 
 export const config = {
