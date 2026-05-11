@@ -1,24 +1,21 @@
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
 
+// These are the Supabase PUBLIC (anon) credentials — safe to hardcode.
+// The anon key is designed to be exposed in browser code; Supabase RLS
+// controls what it can actually access.
+const SUPABASE_URL = 'https://mwouzebdhtngrcyxsysw.supabase.co';
+const SUPABASE_ANON_KEY =
+  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im13b3V6ZWJkaHRuZ3JjeXhzeXN3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgzNDQ2ODgsImV4cCI6MjA5MzkyMDY4OH0.nM1ZBfCWjcL1cQK-WurFI_FwgQIk3lA-CmX4rnQVGqY';
+
 let _client: SupabaseClient | null = null;
 
-// Fetches Supabase config from the server at runtime so we never depend
-// on NEXT_PUBLIC_* vars being inlined by the bundler.
-export async function getBrowserSupabase(): Promise<SupabaseClient> {
+export function getBrowserSupabase(): SupabaseClient {
   if (_client) return _client;
 
-  const res = await fetch('/api/auth/config');
-  if (!res.ok) {
-    const { error } = await res.json().catch(() => ({ error: 'Unknown error' }));
-    throw new Error(error || 'Failed to load Supabase config');
-  }
-  const { url, anonKey } = await res.json();
-
-  _client = createClient(url, anonKey, {
+  _client = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
     auth: {
       persistSession: true,
       autoRefreshToken: true,
-      // Store session in cookies so middleware can read it server-side
       storage: {
         getItem: (key) => {
           if (typeof document === 'undefined') return null;
