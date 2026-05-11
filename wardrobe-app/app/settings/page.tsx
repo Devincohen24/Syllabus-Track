@@ -58,6 +58,7 @@ function SettingsContent() {
 
   const save = async () => {
     setSaving(true);
+    setFlash('');
     const payload: Record<string, unknown> = {
       location: prefs.location || '',
       temperatureUnit: prefs.temperatureUnit || 'fahrenheit',
@@ -85,6 +86,9 @@ function SettingsContent() {
       setGoogleClientId('');
       setGoogleClientSecret('');
       setTimeout(() => setSaved(false), 3000);
+    } else {
+      const data = await res.json().catch(() => ({}));
+      setFlash(`Error saving settings: ${data.error || res.statusText}. Check your Supabase setup.`);
     }
   };
 
