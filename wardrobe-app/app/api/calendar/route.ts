@@ -3,17 +3,8 @@ import { getTodayEventsFromIcs } from '@/lib/ical-calendar';
 import { getTodayEvents } from '@/lib/google-calendar';
 import { readWardrobe } from '@/lib/storage';
 import { cookies } from 'next/headers';
-import { getServerUser } from '@/lib/auth-server';
-import { isPremium } from '@/lib/subscription';
 
 export async function GET(req: NextRequest) {
-  // Calendar is a premium feature
-  const user = await getServerUser();
-  const premium = user ? await isPremium(user.id) : false;
-  if (!premium) {
-    return NextResponse.json({ events: [], connected: false, locked: true });
-  }
-
   const { preferences } = await readWardrobe();
 
   if (preferences.calendarIcsUrl) {
