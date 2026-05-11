@@ -3,6 +3,7 @@ import { recommendOutfit } from '@/lib/claude';
 import { readWardrobe } from '@/lib/storage';
 import { getWeather } from '@/lib/weather';
 import { getTodayEvents } from '@/lib/google-calendar';
+import { getTodayEventsFromIcs } from '@/lib/ical-calendar';
 import { getStyleProfile } from '@/lib/learning';
 import { cookies } from 'next/headers';
 import { WeatherData, CalendarEvent } from '@/types';
@@ -26,14 +27,17 @@ export async function GET() {
   }
 
   let events: CalendarEvent[] = [];
-  const cookieStore = await cookies();
-  const accessToken = cookieStore.get('google_access_token')?.value;
-  const refreshToken = cookieStore.get('google_refresh_token')?.value;
-  const clientId = preferences.googleClientId || process.env.GOOGLE_CLIENT_ID;
-  const clientSecret = preferences.googleClientSecret || process.env.GOOGLE_CLIENT_SECRET;
-
-  if (accessToken && refreshToken && clientId && clientSecret) {
-    events = await getTodayEvents(accessToken, refreshToken, clientId, clientSecret).catch(() => []);
+  if (preferences.calendarIcsUrl) {
+    events = await getTodayEventsFromIcs(preferences.calendarIcsUrl).catch(() => []);
+  } else {
+    const cookieStore = await cookies();
+    const accessToken = cookieStore.get('google_access_token')?.value;
+    const refreshToken = cookieStore.get('google_refresh_token')?.value;
+    const clientId = preferences.googleClientId || process.env.GOOGLE_CLIENT_ID;
+    const clientSecret = preferences.googleClientSecret || process.env.GOOGLE_CLIENT_SECRET;
+    if (accessToken && refreshToken && clientId && clientSecret) {
+      events = await getTodayEvents(accessToken, refreshToken, clientId, clientSecret).catch(() => []);
+    }
   }
 
   // Fetch learned style profile in parallel with everything else

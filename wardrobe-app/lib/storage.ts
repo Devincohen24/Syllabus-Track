@@ -46,6 +46,7 @@ function prefsFromRow(row: Record<string, unknown>): UserPreferences {
     location: (row.location as string) ?? '',
     temperatureUnit: (row.temperature_unit as 'celsius' | 'fahrenheit') ?? 'fahrenheit',
     googleCalendarConnected: (row.google_calendar_connected as boolean) ?? false,
+    calendarIcsUrl: (row.calendar_ics_url as string) ?? undefined,
     anthropicApiKey: (row.anthropic_api_key as string) ?? undefined,
     openWeatherApiKey: (row.open_weather_api_key as string) ?? undefined,
     googleClientId: (row.google_client_id as string) ?? undefined,
@@ -123,6 +124,7 @@ export async function updatePreferences(updates: Partial<UserPreferences>): Prom
   if (updates.location !== undefined) rowUpdates.location = updates.location;
   if (updates.temperatureUnit !== undefined) rowUpdates.temperature_unit = updates.temperatureUnit;
   if (updates.googleCalendarConnected !== undefined) rowUpdates.google_calendar_connected = updates.googleCalendarConnected;
+  if (updates.calendarIcsUrl !== undefined) rowUpdates.calendar_ics_url = updates.calendarIcsUrl;
   if (updates.anthropicApiKey !== undefined) rowUpdates.anthropic_api_key = updates.anthropicApiKey;
   if (updates.openWeatherApiKey !== undefined) rowUpdates.open_weather_api_key = updates.openWeatherApiKey;
   if (updates.googleClientId !== undefined) rowUpdates.google_client_id = updates.googleClientId;

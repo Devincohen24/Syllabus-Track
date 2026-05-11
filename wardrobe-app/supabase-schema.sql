@@ -26,6 +26,7 @@ create table if not exists user_preferences (
   google_calendar_connected boolean default false,
   anthropic_api_key text,
   open_weather_api_key text,
+  calendar_ics_url text,
   google_client_id text,
   google_client_secret text
 );

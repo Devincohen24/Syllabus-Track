@@ -10,6 +10,7 @@ interface Preferences {
   styleProfile: string[];
   favoriteColors: string[];
   googleCalendarConnected: boolean;
+  calendarIcsUrl?: string;
   hasAnthropicKey: boolean;
   hasWeatherKey: boolean;
   hasGoogleCreds: boolean;
@@ -62,6 +63,7 @@ function SettingsContent() {
       temperatureUnit: prefs.temperatureUnit || 'fahrenheit',
       styleProfile: prefs.styleProfile || [],
       favoriteColors: prefs.favoriteColors || [],
+      calendarIcsUrl: prefs.calendarIcsUrl || '',
     };
     if (anthropicKey) payload.anthropicApiKey = anthropicKey;
     if (weatherKey) payload.openWeatherApiKey = weatherKey;
@@ -230,57 +232,83 @@ function SettingsContent() {
         </div>
       </section>
 
-      {/* Google Calendar */}
-      <section className="bg-white rounded-2xl p-6 shadow-md space-y-4">
+      {/* Calendar */}
+      <section className="bg-white rounded-2xl p-6 shadow-md space-y-5">
         <div className="flex items-center justify-between">
-          <h2 className="font-semibold text-gray-800 text-lg">Google Calendar</h2>
-          {prefs.googleCalendarConnected && (
+          <h2 className="font-semibold text-gray-800 text-lg">Calendar</h2>
+          {(prefs.calendarIcsUrl || prefs.googleCalendarConnected) && (
             <span className="text-xs bg-green-100 text-green-700 px-2 py-1 rounded-full">Connected</span>
           )}
         </div>
 
-        <p className="text-sm text-gray-500">
-          Connect your Google Calendar so the app can tailor outfit suggestions to your events.
-        </p>
-
-        <div className="space-y-3">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Google Client ID
-              {prefs.hasGoogleCreds && <span className="ml-2 text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded-full">Set</span>}
-            </label>
-            <input
-              type="text"
-              placeholder="your-client-id.apps.googleusercontent.com"
-              value={googleClientId}
-              onChange={(e) => setGoogleClientId(e.target.value)}
-              className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-300"
-            />
+        {/* ICS URL — recommended */}
+        <div className="space-y-2">
+          <div className="flex items-center gap-2">
+            <span className="text-xs font-bold uppercase tracking-wide text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded-full">Recommended</span>
+            <label className="text-sm font-medium text-gray-700">Paste your calendar link</label>
           </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Google Client Secret</label>
-            <input
-              type="password"
-              placeholder={prefs.hasGoogleCreds ? 'Already set' : 'GOCSPX-...'}
-              value={googleClientSecret}
-              onChange={(e) => setGoogleClientSecret(e.target.value)}
-              className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-300"
-            />
+          <input
+            type="url"
+            placeholder="webcal:// or https://... (iCal/ICS link)"
+            value={prefs.calendarIcsUrl || ''}
+            onChange={(e) => setPrefs({ ...prefs, calendarIcsUrl: e.target.value })}
+            className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-300"
+          />
+          <div className="bg-gray-50 rounded-xl p-3 space-y-2 text-xs text-gray-500">
+            <p className="font-medium text-gray-700">How to get your link:</p>
+            <p><span className="font-semibold">iPhone / iCloud:</span> Open the Calendar app → tap the calendar name → Share Calendar → enable Public Calendar → Copy Link</p>
+            <p><span className="font-semibold">Google Calendar:</span> calendar.google.com → ⋮ next to your calendar → Settings → scroll to "Secret address in iCal format" → copy the URL</p>
+            <p><span className="font-semibold">Outlook:</span> outlook.com → Settings → View all → Calendar → Shared calendars → Publish → Copy ICS link</p>
           </div>
-          <p className="text-xs text-gray-400">
-            Create OAuth credentials at Google Cloud Console. Set redirect URI to:
-            <code className="bg-gray-100 px-1 rounded ml-1 text-gray-600">{typeof window !== 'undefined' ? window.location.origin : ''}/api/auth/callback</code>
-          </p>
         </div>
 
-        {prefs.hasGoogleCreds && (
-          <a
-            href="/api/auth/google"
-            className="inline-block bg-white border border-gray-300 hover:border-indigo-400 text-gray-700 font-medium px-4 py-2.5 rounded-xl text-sm transition-colors"
-          >
-            {prefs.googleCalendarConnected ? 'Reconnect Google Calendar' : 'Connect Google Calendar'}
-          </a>
-        )}
+        {/* Divider */}
+        <div className="flex items-center gap-3">
+          <div className="flex-1 h-px bg-gray-200" />
+          <span className="text-xs text-gray-400">or use Google OAuth</span>
+          <div className="flex-1 h-px bg-gray-200" />
+        </div>
+
+        {/* Google OAuth (advanced) */}
+        <details className="group">
+          <summary className="cursor-pointer text-sm text-gray-500 hover:text-gray-700 select-none list-none flex items-center gap-1">
+            <span className="group-open:rotate-90 transition-transform inline-block">▶</span>
+            Advanced: Connect via Google OAuth
+          </summary>
+          <div className="mt-3 space-y-3">
+            <div>
+              <label className="block text-xs font-medium text-gray-600 mb-1">
+                Google Client ID
+                {prefs.hasGoogleCreds && <span className="ml-2 text-xs bg-green-100 text-green-700 px-1.5 py-0.5 rounded-full">Set</span>}
+              </label>
+              <input
+                type="text"
+                placeholder="your-client-id.apps.googleusercontent.com"
+                value={googleClientId}
+                onChange={(e) => setGoogleClientId(e.target.value)}
+                className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-300"
+              />
+            </div>
+            <div>
+              <label className="block text-xs font-medium text-gray-600 mb-1">Google Client Secret</label>
+              <input
+                type="password"
+                placeholder={prefs.hasGoogleCreds ? 'Already set' : 'GOCSPX-...'}
+                value={googleClientSecret}
+                onChange={(e) => setGoogleClientSecret(e.target.value)}
+                className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-300"
+              />
+            </div>
+            {prefs.hasGoogleCreds && (
+              <a
+                href="/api/auth/google"
+                className="inline-block bg-white border border-gray-300 hover:border-indigo-400 text-gray-700 font-medium px-4 py-2 rounded-xl text-sm transition-colors"
+              >
+                {prefs.googleCalendarConnected ? 'Reconnect Google Calendar' : 'Connect Google Calendar'}
+              </a>
+            )}
+          </div>
+        </details>
       </section>
 
       {/* Save button */}

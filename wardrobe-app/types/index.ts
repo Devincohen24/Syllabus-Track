@@ -75,6 +75,7 @@ export interface UserPreferences {
   location: string;
   temperatureUnit: 'celsius' | 'fahrenheit';
   googleCalendarConnected: boolean;
+  calendarIcsUrl?: string;
   openWeatherApiKey?: string;
   anthropicApiKey?: string;
   googleClientId?: string;
