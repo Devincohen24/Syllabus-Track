@@ -14,10 +14,11 @@ function LoginForm() {
   const [error, setError] = useState('');
 
   useEffect(() => {
-    // If already signed in, go home
-    getBrowserSupabase().auth.getSession().then(({ data }) => {
-      if (data.session) router.replace('/');
-    });
+    getBrowserSupabase().then((sb) => {
+      sb.auth.getSession().then(({ data }) => {
+        if (data.session) router.replace('/');
+      });
+    }).catch(() => {});
   }, [router]);
 
   const handleLogin = async (e: React.FormEvent) => {
@@ -25,31 +26,32 @@ function LoginForm() {
     setLoading(true);
     setError('');
 
-    const supabase = getBrowserSupabase();
-    const { error: authError } = await supabase.auth.signInWithPassword({ email, password });
-
-    if (authError) {
-      setError(authError.message);
+    try {
+      const supabase = await getBrowserSupabase();
+      const { error: authError } = await supabase.auth.signInWithPassword({ email, password });
+      if (authError) {
+        setError(authError.message);
+        return;
+      }
+      const next = searchParams.get('next') || '/';
+      router.push(next);
+      router.refresh();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Login failed');
+    } finally {
       setLoading(false);
-      return;
     }
-
-    const next = searchParams.get('next') || '/';
-    router.push(next);
-    router.refresh();
   };
 
   return (
     <div className="flex items-center justify-center py-12 px-4">
       <div className="w-full max-w-sm">
-        {/* Logo */}
         <div className="text-center mb-8">
           <span className="text-5xl">👗</span>
           <h1 className="text-2xl font-bold text-gray-900 mt-3">StyleAI</h1>
           <p className="text-gray-500 text-sm mt-1">Your AI-powered wardrobe assistant</p>
         </div>
 
-        {/* Card */}
         <div className="bg-white rounded-2xl shadow-md p-8 space-y-5">
           <h2 className="text-lg font-semibold text-gray-800 text-center">Sign in</h2>
 
