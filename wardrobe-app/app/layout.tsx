@@ -6,6 +6,15 @@ import LogoutButton from '@/components/LogoutButton';
 export const metadata: Metadata = {
   title: 'StyleAI — Smart Wardrobe',
   description: 'AI-powered wardrobe assistant that picks your outfit based on weather and calendar',
+  manifest: '/manifest.webmanifest',
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: 'default',
+    title: 'StyleAI',
+  },
+  other: {
+    'mobile-web-app-capable': 'yes',
+  },
 };
 
 function Nav() {
@@ -47,6 +56,10 @@ function Nav() {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en" className="h-full">
+      <head>
+        <meta name="theme-color" content="#4f46e5" />
+        <link rel="apple-touch-icon" href="/icon-192.png" />
+      </head>
       <body className="min-h-full flex flex-col bg-gray-50">
         <Nav />
         <main className="flex-1 max-w-3xl mx-auto w-full px-4 py-6">{children}</main>
